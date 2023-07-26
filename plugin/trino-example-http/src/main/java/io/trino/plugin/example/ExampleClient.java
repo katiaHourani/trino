@@ -45,7 +45,7 @@ public class ExampleClient
     private final Supplier<Map<String, Map<String, ExampleTable>>> schemas;
 
     @Inject
-    public ExampleClient(ExampleConfig config, JsonCodec<Map<String, List<ExampleTable>>> catalogCodec)
+    public ExampleClient(ExampleConfig config,JsonCodec<Map<String, List<ExampleTable>>> catalogCodec)
     {
         requireNonNull(catalogCodec, "catalogCodec is null");
         schemas = Suppliers.memoize(schemasSupplier(catalogCodec, config.getMetadata()));
