@@ -30,13 +30,13 @@ public class FileRecordSetProvider
     @Override
     public RecordSet getRecordSet(ConnectorTransactionHandle transaction, ConnectorSession session, ConnectorSplit split, ConnectorTableHandle table, List<? extends ColumnHandle> columns)
     {
-        ExampleSplit exampleSplit = (ExampleSplit) split;
+        FileSplit exampleSplit = (FileSplit) split;
 
-        ImmutableList.Builder<ExampleColumnHandle> handles = ImmutableList.builder();
+        ImmutableList.Builder<FileColumnHandle> handles = ImmutableList.builder();
         for (ColumnHandle handle : columns) {
-            handles.add((ExampleColumnHandle) handle);
+            handles.add((FileColumnHandle) handle);
         }
 
-        return new ExampleRecordSet(exampleSplit, handles.build());
+        return new FileRecordSet(exampleSplit, handles.build());
     }
 }

@@ -19,48 +19,37 @@ import com.google.common.collect.ImmutableList;
 import io.trino.spi.HostAddress;
 import io.trino.spi.connector.ConnectorSplit;
 
-import java.net.URI;
 import java.util.List;
 
-import static io.airlift.slice.SizeOf.estimatedSizeOf;
-import static io.airlift.slice.SizeOf.instanceSize;
 import static java.util.Objects.requireNonNull;
 
 public class FileSplit
         implements ConnectorSplit
 {
-    private static final int INSTANCE_SIZE = instanceSize(FileSplit.class);
-
     private final String path;
+    private final int startLine;
+    private final int endLine;
     private final boolean remotelyAccessible;
-    private final List<HostAddress> addresses;
 
     @JsonCreator
-    public FileSplit(@JsonProperty("path") String uri)
+    public FileSplit(@JsonProperty("path") String path, @JsonProperty("startLine") int startLine, @JsonProperty("endLine") int endLine)
     {
-        this.path = requireNonNull(uri, "path is null");
-
-        remotelyAccessible = true;
-        addresses = ImmutableList.of(HostAddress.fromUri(URI.create(uri)));
+        this.path = requireNonNull(path, "path is null");
+        this.startLine = requireNonNull(startLine, "startLine is null");
+        this.endLine = requireNonNull(endLine, "endLine is null");
+        remotelyAccessible = false;
     }
 
     @JsonProperty
-    public String getUri()
+    public String getPath()
     {
-        return uri;
+        return path;
     }
 
     @Override
     public boolean isRemotelyAccessible()
     {
-        // only http or https is remotely accessible
         return remotelyAccessible;
-    }
-
-    @Override
-    public List<HostAddress> getAddresses()
-    {
-        return addresses;
     }
 
     @Override
@@ -70,10 +59,20 @@ public class FileSplit
     }
 
     @Override
-    public long getRetainedSizeInBytes()
+    public List<HostAddress> getAddresses()
     {
-        return INSTANCE_SIZE
-                + estimatedSizeOf(uri)
-                + estimatedSizeOf(addresses, HostAddress::getRetainedSizeInBytes);
+        return ImmutableList.of();
+    }
+
+    @JsonProperty
+    public int getStartLine()
+    {
+        return startLine;
+    }
+
+    @JsonProperty
+    public int getEndLine()
+    {
+        return endLine;
     }
 }
