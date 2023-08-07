@@ -24,16 +24,27 @@ import io.trino.spi.connector.ConnectorTransactionHandle;
 import io.trino.spi.transaction.IsolationLevel;
 
 import static io.trino.plugin.file.FileTransactionHandle.INSTANCE;
+import static java.util.Objects.requireNonNull;
 
 public class FileConnector
         implements Connector
 {
     private final LifeCycleManager lifeCycleManager;
+    private final FileMetadata metadata;
+    private final FileSplitManager splitManager;
+    private final FileRecordSetProvider recordSetProvider;
 
     @Inject
-    public FileConnector(LifeCycleManager lifeCycleManager)
+    public FileConnector(
+            LifeCycleManager lifeCycleManager,
+            FileMetadata metadata,
+            FileSplitManager splitManager,
+            FileRecordSetProvider recordSetProvider)
     {
-        this.lifeCycleManager = lifeCycleManager;
+        this.lifeCycleManager = requireNonNull(lifeCycleManager, "lifeCycleManager is null");
+        this.metadata = requireNonNull(metadata, "metadata is null");
+        this.splitManager = requireNonNull(splitManager, "splitManager is null");
+        this.recordSetProvider = requireNonNull(recordSetProvider, "recordSetProvider is null");
     }
 
     @Override
@@ -51,19 +62,19 @@ public class FileConnector
     @Override
     public ConnectorMetadata getMetadata(ConnectorSession session, ConnectorTransactionHandle transactionHandle)
     {
-        return null;
+        return metadata;
     }
 
     @Override
     public ConnectorSplitManager getSplitManager()
     {
-        return null;
+        return splitManager;
     }
 
     @Override
     public ConnectorRecordSetProvider getRecordSetProvider()
     {
-        return null;
+        return recordSetProvider;
     }
 
     @Override

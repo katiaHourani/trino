@@ -15,15 +15,16 @@ package io.trino.plugin.file;
 
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.io.ByteSource;
-import com.google.common.io.CountingInputStream;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import io.trino.spi.connector.RecordCursor;
 import io.trino.spi.type.Type;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
-import java.io.UncheckedIOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
@@ -33,7 +34,6 @@ import static io.trino.spi.type.BigintType.BIGINT;
 import static io.trino.spi.type.BooleanType.BOOLEAN;
 import static io.trino.spi.type.DoubleType.DOUBLE;
 import static io.trino.spi.type.VarcharType.createUnboundedVarcharType;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class FileRecordCursor
         implements RecordCursor
@@ -48,7 +48,7 @@ public class FileRecordCursor
 
     private List<String> fields;
 
-    public FileRecordCursor(List<FileColumnHandle> columnHandles, ByteSource byteSource)
+    public FileRecordCursor(List<FileColumnHandle> columnHandles, String path)
     {
         this.columnHandles = columnHandles;
 
@@ -57,14 +57,19 @@ public class FileRecordCursor
             FileColumnHandle columnHandle = columnHandles.get(i);
             fieldToColumnIndex[i] = columnHandle.getOrdinalPosition();
         }
-
-        try (CountingInputStream input = new CountingInputStream(byteSource.openStream())) {
-            lines = byteSource.asCharSource(UTF_8).readLines().iterator();
-            totalBytes = input.getCount();
+        File splitFile = new File(path);
+        this.totalBytes = splitFile.length();
+        List<String> linesList = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                linesList.add(line);
+            }
         }
         catch (IOException e) {
-            throw new UncheckedIOException(e);
+            e.printStackTrace();
         }
+        this.lines = linesList.iterator();
     }
 
     @Override

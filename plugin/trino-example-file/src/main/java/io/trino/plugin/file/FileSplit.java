@@ -23,21 +23,19 @@ import java.util.List;
 
 import static java.util.Objects.requireNonNull;
 
+import java.util.ArrayList;
+
 public class FileSplit
         implements ConnectorSplit
 {
     private final String path;
-    private final int startLine;
-    private final int endLine;
     private final boolean remotelyAccessible;
 
     @JsonCreator
-    public FileSplit(@JsonProperty("path") String path, @JsonProperty("startLine") int startLine, @JsonProperty("endLine") int endLine)
+    public FileSplit(@JsonProperty("path") String path)
     {
         this.path = requireNonNull(path, "path is null");
-        this.startLine = requireNonNull(startLine, "startLine is null");
-        this.endLine = requireNonNull(endLine, "endLine is null");
-        remotelyAccessible = false;
+        remotelyAccessible = true;
     }
 
     @JsonProperty
@@ -61,18 +59,8 @@ public class FileSplit
     @Override
     public List<HostAddress> getAddresses()
     {
+        List<HostAddress> hosts = new ArrayList<>();
+        hosts.add(HostAddress.fromParts("127.0.0.1",8080));
         return ImmutableList.of();
-    }
-
-    @JsonProperty
-    public int getStartLine()
-    {
-        return startLine;
-    }
-
-    @JsonProperty
-    public int getEndLine()
-    {
-        return endLine;
     }
 }

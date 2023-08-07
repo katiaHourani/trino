@@ -22,15 +22,15 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Objects.requireNonNull;
 
-class FileSchema
+public class FileSchema
 {
     private final String name;
     private final Map<String, FileTable> tables;
 
     @JsonCreator
     public FileSchema(
-            @JsonProperty String name,
-            @JsonProperty Map<String, FileTable> tables)
+            @JsonProperty("name") String name,
+            @JsonProperty("tables") Map<String, FileTable> tables)
     {
         checkArgument(!isNullOrEmpty(name), "name is null or is empty");
         this.name = requireNonNull(name, "name is null");

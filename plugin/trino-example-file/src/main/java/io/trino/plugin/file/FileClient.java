@@ -14,8 +14,6 @@
 
 package io.trino.plugin.file;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Supplier;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
@@ -23,6 +21,7 @@ import com.google.inject.Inject;
 import io.airlift.json.JsonCodec;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -41,12 +40,13 @@ public class FileClient
     private final Supplier<BufferedReader> metadataReaderSipplier;
 
     @Inject
-    private FileClient(FileConfig config, JsonCodec<Map<String, List<FileTable>>> catalogCodec)
+    private FileClient(FileConfig config, JsonCodec<Map<String, List<FileTable>>> catalogCodec, JsonCodec<Map<String, FileSchema>> schemaCatalogCodec)
     {
         requireNonNull(catalogCodec, "catalogCodec is null");
+        requireNonNull(schemaCatalogCodec, "catalogCodec is null");
         requireNonNull(config, "config is null");
-        metadataReaderSipplier = Suppliers.memoize(metadataReaderSupplier(config.getDataLocation() + "metadata.json"));
-        schemas = Suppliers.memoize(schemasSupplier(catalogCodec, config.getDataLocation()));
+        metadataReaderSipplier = Suppliers.memoize(metadataReaderSupplier(config.getDataLocation() + "/metadata.json"));
+        schemas = Suppliers.memoize(schemasSupplier(schemaCatalogCodec, catalogCodec, config.getDataLocation()));
     }
 
     public Set<String> getSchemaNames()
@@ -76,11 +76,11 @@ public class FileClient
         };
     }
 
-    private Supplier<Map<String, FileSchema>> schemasSupplier(JsonCodec<Map<String, List<FileTable>>> catalogCodec, String dataLocation)
+    private Supplier<Map<String, FileSchema>> schemasSupplier(JsonCodec<Map<String, FileSchema>> schemaCatalogCodec, JsonCodec<Map<String, List<FileTable>>> catalogCodec, String dataLocation)
     {
         return () -> {
             try {
-                return lookupSchemas(dataLocation, catalogCodec);
+                return lookupSchemas(dataLocation, catalogCodec, schemaCatalogCodec);
             }
             catch (IOException e) {
                 throw new UncheckedIOException(e);
@@ -88,20 +88,42 @@ public class FileClient
         };
     }
 
-    private Map<String, FileSchema> lookupSchemas(String dataLocation, JsonCodec<Map<String, List<FileTable>>> catalogCodec)
+    private Map<String, FileSchema> lookupSchemas(String dataLocation, JsonCodec<Map<String, List<FileTable>>> catalogCodec, JsonCodec<Map<String, FileSchema>> schemaCatalogCodec)
             throws IOException
     {
         String json = "";
         String line = this.metadataReaderSipplier.get().readLine();
         // read all lines
         while (line != null) {
-            json += line;
+            json += line.trim();
             // read next line
             line = this.metadataReaderSipplier.get().readLine();
         }
-        ObjectMapper mapper = new ObjectMapper();
-        TypeReference<Map<String, FileSchema>> typeRef = new TypeReference<>() {};
-        Map<String, FileSchema> map = mapper.readValue(json, typeRef);
-        return map;
+        return schemaCatalogCodec.fromJson(json);
+    }
+
+    public FileTable getTable(String schema, String tableName)
+    {
+        requireNonNull(schema, "schema is null");
+        requireNonNull(tableName, "tableName is null");
+        FileSchema fileSchema = schemas.get().get(schema);
+        if (fileSchema == null) {
+            return null;
+        }
+        return fileSchema.getTables().get(tableName);
+    }
+
+    public File[] getTableFiles(String tablePath)
+    {
+        File dir = new File(tablePath); // replace with your directory
+        System.out.println(tablePath);
+        File[] files = dir.listFiles();
+
+        if (files != null) {
+            return files;
+        }
+        else {
+            return null;
+        }
     }
 }

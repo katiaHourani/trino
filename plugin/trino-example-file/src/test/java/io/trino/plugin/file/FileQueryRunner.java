@@ -97,7 +97,6 @@ public final class FileQueryRunner
                 queryRunner.installPlugin(new TpchPlugin());
                 queryRunner.createCatalog("tpch", "tpch", ImmutableMap.of());
 
-                copyTpchTables(queryRunner, "tpch", TINY_SCHEMA_NAME, createSession(), initialTables);
 
                 return queryRunner;
             }
@@ -121,7 +120,7 @@ public final class FileQueryRunner
     {
         DistributedQueryRunner queryRunner = createFileQueryRunner(
                 ImmutableMap.of("http-server.http.port", "8080"),
-                ImmutableMap.of("file.location", "~/data"),
+                ImmutableMap.of("file.location", "/home/ubuntu/data"),
                 TpchTable.getTables());
         Thread.sleep(10);
         Logger log = Logger.get(FileQueryRunner.class);

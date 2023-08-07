@@ -30,8 +30,11 @@ public class FileModule
         binder.bind(FileConnector.class).in(Scopes.SINGLETON);
         binder.bind(FileMetadata.class).in(Scopes.SINGLETON);
         binder.bind(FileClient.class).in(Scopes.SINGLETON);
+        binder.bind(FileSplitManager.class).in(Scopes.SINGLETON);
+        binder.bind(FileRecordSetProvider.class).in(Scopes.SINGLETON);
         configBinder(binder).bindConfig(FileConfig.class);
 
+        jsonCodecBinder(binder).bindMapJsonCodec(String.class, FileSchema.class);
         jsonCodecBinder(binder).bindMapJsonCodec(String.class, listJsonCodec(FileTable.class));
     }
 }
